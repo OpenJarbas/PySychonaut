@@ -187,11 +187,7 @@ class Erowid(object):
             report["substance"] = fields[2].getText()
             report["date"] = fields[3].getText()
             report["url"] = base_url + r.find("a")["href"]
+            report["exp_id"] = report["url"].split("=")[1]
             reports.append(report)
         return reports
 
-
-reports = Erowid.search_reports("1P-LSD")
-print reports[0].keys()
-for report in reports[:5]:
-    print report["substance"], report["url"], report["date"]

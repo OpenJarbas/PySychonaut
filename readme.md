@@ -51,7 +51,7 @@ searching experience reports
         
 output
 
-        ['date', 'url', 'substance', 'name', 'author']
+        ['substance', 'name', 'author', 'url', 'date', 'exp_id']
         1P-ETH-LAD https://erowid.org/experiences/exp.php?ID=109647 Dec 9 2016
         1P-LSD https://erowid.org/experiences/exp.php?ID=108914 Aug 1 2016
         1P-LSD https://erowid.org/experiences/exp.php?ID=108138 Mar 16 2016
