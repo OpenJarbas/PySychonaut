@@ -158,5 +158,40 @@ class Erowid(object):
             exp = Erowid.get_experience(random.randint(1, 111451))
         return exp
 
+    @staticmethod
+    def search_reports(search_term, order="substance"):
+        base_url = "https://erowid.org/experiences/"
+        search_term = search_term.replace(" ", "+")
+        url = base_url + "exp.cgi?Str=" + search_term
+        if order == "substance":
+            url += "&OldSort=SA"
+        elif order in ["date", "recent"]:
+            url += "&OldSort=PDD"
+        elif order in ["old", "older", "oldest"]:
+            url += "&OldSort=PDA"
+        elif order in ["rating"]:
+            url += "&OldSort=RA"
+        elif order is not None:
+            url += "&OldSort=" + order
+
+        response = requests.get(url).text
+        soup = BeautifulSoup(response, "lxml")
+        table = soup.find('table', {'class': "exp-list-table"})
+        table = table.find_all("tr", {'class': ""})[2:]
+        reports = []
+        for r in table:
+            report = {}
+            fields = r.find_all("td")[1:]
+            report["name"] = fields[0].getText()
+            report["author"] = fields[1].getText()
+            report["substance"] = fields[2].getText()
+            report["date"] = fields[3].getText()
+            report["url"] = base_url + r.find("a")["href"]
+            reports.append(report)
+        return reports
 
 
+reports = Erowid.search_reports("1P-LSD")
+print reports[0].keys()
+for report in reports[:5]:
+    print report["substance"], report["url"], report["date"]

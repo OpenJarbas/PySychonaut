@@ -48,3 +48,17 @@ chem_name : d-lysergic acid diethylamide
 description : LSD is the best known and most researched psychedelic.  It is the standard against which all other psychedelics are compared.  It is active at extremely low doses and is most commonly available on blotter or in liquid form.
 
 """
+
+reports = Erowid.search_reports("1P-LSD")
+print reports[0].keys()
+for report in reports[:5]:
+    print report["substance"], report["url"], report["date"]
+
+"""
+['date', 'url', 'substance', 'name', 'author']
+1P-ETH-LAD https://erowid.org/experiences/exp.php?ID=109647 Dec 9 2016
+1P-LSD https://erowid.org/experiences/exp.php?ID=108914 Aug 1 2016
+1P-LSD https://erowid.org/experiences/exp.php?ID=108138 Mar 16 2016
+1P-LSD https://erowid.org/experiences/exp.php?ID=108063 Mar 11 2016
+1P-LSD https://erowid.org/experiences/exp.php?ID=107880 Feb 3 2016
+"""
