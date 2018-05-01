@@ -280,7 +280,27 @@ class PsychonautWiki(object):
         self.substance_list = self.get_substance_list()
         self.substances = self.get_substance_data()
 
+    def fix_substance_names(self, sentence):
+        # check for drug slang names
+        for substance in self.drug_slang:
+            name = self.drug_slang[substance].strip()
+            if substance.lower() in sentence.split(" "):
+                return sentence.replace(substance.lower(), name)
+
+        # check substance list
+        for substance in self.substance_list:
+            if substance.lower() in sentence.split(" "):
+                return sentence.replace(substance.lower(), substance)
+
+        # probably not talking about drugs
+        return False
+
     def search_psychonaut_wiki(self, substance):
+        s = self.fix_substance_names(substance)
+        if not s:
+            print "Warning, this query does not seem to contain a valid substance name"
+        else:
+            substance = s
         # match case, psychonaut wiki doesn't like lower-case
         subs = self.substance_list
         substances = [s.lower() for s in subs]
@@ -401,9 +421,9 @@ class AskTheCaterpillar(object):
     def __init__(self):
         self.substance_list = PsychonautWiki.get_substance_list()
 
-    def is_about_drugs(self, sentence):
+    def fix_substance_names(self, sentence):
 
-        # check for drug slang names
+        # check for drug slanslangg names
         for substance in self.drug_slang:
             name = self.drug_slang[substance].strip()
             if substance.lower() in sentence.split(" "):

@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='PySychonaut',
-    version='0.2',
+    version='0.3',
     packages=['pysychonaut'],
     url='https://github.com/JarbasAl/PySychonaut',
     license='MIT',
