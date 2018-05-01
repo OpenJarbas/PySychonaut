@@ -1,13 +1,13 @@
 from setuptools import setup
 
 setup(
-    name='py_erowid',
+    name='PySychonaut',
     version='0.2',
-    packages=['pyerowid'],
-    url='https://github.com/JarbasAl/py_erowid',
+    packages=['pysychonaut'],
+    url='https://github.com/JarbasAl/PySychonaut',
     license='MIT',
     author='jarbasAI',
     author_email='jarbasai@mailfence.com',
-    description='unnoficial erowid api',
+    description='unnoficial erowid, psychonaut wiki and ask_the_caterpillar apis',
     install_requires=["lxml", "bs4"]
 )
