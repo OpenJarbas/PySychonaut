@@ -1,6 +1,6 @@
 ## PySychonaut
 
-Unofficial pytho api for [Erowid](http://erowid.org/), [PsychonautWiki](http://psychonautwiki.org/) and [AskTheCaterpillar](http://askthecaterpillar.com/)
+Unofficial python api for [Erowid](http://erowid.org/), [PsychonautWiki](http://psychonautwiki.org/) and [AskTheCaterpillar](http://askthecaterpillar.com/)
 
 If you plan on scrapping erowid please read [How to Spider Erowid](https://erowid.org/general/about/about_archives1.shtml#howtospider)
 
