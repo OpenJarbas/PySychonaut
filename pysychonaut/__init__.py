@@ -127,6 +127,11 @@ class Erowid(object):
         return categories
 
     @staticmethod
+    def get_pharms():
+        base_url = 'https://erowid.org/pharms/'
+        return Erowid._extract_list(base_url)
+
+    @staticmethod
     def get_chemicals():
         base_url = 'https://erowid.org/chemicals/'
         return Erowid._extract_list(base_url)
