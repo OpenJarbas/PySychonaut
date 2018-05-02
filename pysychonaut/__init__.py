@@ -89,9 +89,11 @@ class Erowid(object):
 
             soup = BeautifulSoup(response, "lxml")
             name = soup.find('div', {'class': 'title'}).getText().strip()
+            author = soup.find('div', {'class': 'author'}).getText().strip()
             drug = soup.find('div', {'class': 'substance'}).getText().strip().lower().replace("/", ", ")
             experience_data = soup.find('table', {'class': 'footdata'}).getText().strip().lower().split("\n")
             data["name"] = name
+            data["author"] = author
             data["substance"] = drug
             data["experience"] = experience
             data["year"] = experience_data[0].split("expid:")[0].replace("exp year: ", "").strip()
