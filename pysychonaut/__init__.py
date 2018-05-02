@@ -56,7 +56,7 @@ class Erowid(object):
             begin_delimiter = '<!-- Start Body -->'
             begin = text.index(begin_delimiter) + len(begin_delimiter)
             end = text.index('<!-- End Body -->')
-            return text[begin:end].strip().replace("<BR>", "\n").replace("<br>", "\n").replace("\n\n", " ")
+            return text[begin:end].strip().replace("<BR>", "\n").replace("<br>", "\n").replace("\n\n", " ").replace("<br/>", "\n")
         except ValueError:
             return ''
 
@@ -90,7 +90,7 @@ class Erowid(object):
             soup = BeautifulSoup(response, "lxml")
             drug = soup.find('div', {'class': 'substance'}).getText().strip().lower().replace("/", ", ")
             experience_data = soup.find('table', {'class': 'footdata'}).getText().strip().lower().split("\n")
-            data["drug"] = drug
+            data["substance"] = drug
             data["experience"] = experience
             data["year"] = experience_data[0].split("expid:")[0].replace("exp year: ", "").strip()
             data["gender"] = experience_data[1].replace("gender: ", "").strip()
@@ -285,33 +285,44 @@ class PsychonautWiki(object):
         self.substance_list = self.get_substance_list()
         self.substances = self.get_substance_data()
 
-    def fix_substance_names(self, sentence):
+    def extract_substance_name(self, sentence):
+
+        words = sentence.lower().split(" ")
+        found = False
         # check for drug slang names
         for substance in self.drug_slang:
+            substance = substance.lower()
             name = self.drug_slang[substance].strip()
-            if substance.lower() in sentence.split(" "):
-                return sentence.replace(substance.lower(), name)
+            for idx, word in enumerate(words):
+                if substance == word:
+                    found = name
+                    break
 
         # check substance list
         for substance in self.substance_list:
-            if substance.lower() in sentence.split(" "):
-                return sentence.replace(substance.lower(), substance)
+            substance = substance.lower()
+            for idx, word in enumerate(words):
+                if substance == word:
+                    found = substance
+                    break
 
-        # probably not talking about drugs
-        return False
+        if found:
+            # match case, psychonaut wiki doesn't like lower-case
+            subs = self.substance_list
+            substances = [s.lower() for s in subs]
+            substance = found.lower()
+            if substance in substances:
+                found = subs[substances.index(substance)]
+
+        return found
 
     def search_psychonaut_wiki(self, substance):
-        s = self.fix_substance_names(substance)
+        s = self.extract_substance_name(substance)
         if not s:
             print "Warning, this query does not seem to contain a valid substance name"
         else:
             substance = s
-        # match case, psychonaut wiki doesn't like lower-case
-        subs = self.substance_list
-        substances = [s.lower() for s in subs]
-        substance = substance.lower()
-        if substance in substances:
-            substance = subs[substances.index(substance)]
+
         url = "https://api.psychonautwiki.org/?query=%7B%0A%20%20%20%20substances(query%3A%20%22" + substance + "%22)%20%7B%0A%20%20%20%20%20%20%20%20name%0A%0A%20%20%20%20%20%20%20%20%23%20routes%20of%20administration%0A%20%20%20%20%20%20%20%20roas%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20name%0A%0A%20%20%20%20%20%20%20%20%20%20%20%20dose%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20units%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20threshold%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20heavy%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20common%20%7B%20min%20max%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20light%20%7B%20min%20max%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20strong%20%7B%20min%20max%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20%20%20%20%20%20%20duration%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20afterglow%20%7B%20min%20max%20units%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20comeup%20%7B%20min%20max%20units%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20duration%20%7B%20min%20max%20units%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20offset%20%7B%20min%20max%20units%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20onset%20%7B%20min%20max%20units%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20peak%20%7B%20min%20max%20units%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20total%20%7B%20min%20max%20units%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20%20%20%20%20%20%20bioavailability%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20min%20max%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20%20%20%23%20subjective%20effects%0A%20%20%20%20%20%20%20%20effects%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20name%20url%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%7D"
         return json.loads(requests.get(url).text)["data"]
 
@@ -428,19 +439,29 @@ class AskTheCaterpillar(object):
 
     def fix_substance_names(self, sentence):
 
-        # check for drug slanslangg names
+        words = sentence.lower().split(" ")
+        found = False
+        # check for drug slang names
         for substance in self.drug_slang:
+            substance = substance.lower()
             name = self.drug_slang[substance].strip()
-            if substance.lower() in sentence.split(" "):
-                return sentence.replace(substance.lower(), name)
+            for idx, word in enumerate(words):
+                if substance == word:
+                    words[idx] = name
+                    found = True
 
         # check substance list
         for substance in self.substance_list:
-            if substance.lower() in sentence.split(" "):
-                return sentence.replace(substance.lower(), substance)
+            substance = substance.lower()
+            for idx, word in enumerate(words):
+                if substance == word:
+                    words[idx] = substance
+                    found = True
 
+        if found:
+            return " ".join(words)
         # probably not talking about drugs
-        return False
+        return found
 
     @staticmethod
     def ask_the_caterpillar(query):
