@@ -470,6 +470,8 @@ class AskTheCaterpillar:
     @staticmethod
     def ask_the_caterpillar(query):
         data = requests.post('https://www.askthecaterpillar.com/query', {"query": query})
-        data = json.loads(data.text)
-        return data["data"]["messages"][0]["content"]
-
+        if data.status_code == 200:
+            data = json.loads(data.text)
+            return data["data"]["messages"][0]["content"]
+        else:
+            return f"Error {r.status_code}: {r.reason}"
