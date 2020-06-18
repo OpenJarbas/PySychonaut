@@ -1,13 +1,14 @@
-import requests
 from bs4 import BeautifulSoup
 import random
 import json
-
-
-__author__ = "jarbasAI"
+from requests_cache import CachedSession
+from datetime import timedelta
 
 
 class Erowid:
+    session = CachedSession(backend='memory',
+                            expire_after=timedelta(hours=24))
+
     drug_slang = {
         'marijuana': "thc", 'hashish': "thc", 'hash': "thc", 'weed': "thc",
         'marijjuana': "thc", 'cannabis': "thc", 'benzo fury': '6-apb', 'l': 'lsd',
@@ -62,8 +63,8 @@ class Erowid:
 
     @staticmethod
     def _extract_list(base_url):
-        response = requests.get(base_url).text
-        soup = BeautifulSoup(response, "lxml")
+        response = Erowid.session.get(base_url).text
+        soup = BeautifulSoup(response, "html.parser")
         table = soup.find('table', {'class': 'topic-chart-surround'})
         categories = table.find_all("tr", {'class': 'topic-surround'})[1:]
         fields = []
@@ -84,10 +85,10 @@ class Erowid:
         data = {"exp_id": exp_id, "url": url}
         try:
 
-            response = requests.get(url).text
+            response = Erowid.session.get(url).text
             experience = Erowid.extract_experience_text(response)
 
-            soup = BeautifulSoup(response, "lxml")
+            soup = BeautifulSoup(response, "html.parser")
             name = soup.find('div', {'class': 'title'}).getText().strip()
             author = soup.find('div', {'class': 'author'}).getText().strip()
             drug = soup.find('div', {'class': 'substance'}).getText().strip().lower().replace("/", ", ")
@@ -123,7 +124,7 @@ class Erowid:
     @staticmethod
     def get_categories():
         base_url = 'https://erowid.org/experiences/exp_list.shtml'
-        response = requests.get(base_url).text
+        response = Erowid.session.get(base_url).text
         categories = []
         for sub in response.split("<!-- Start ")[1:]:
             sub = sub[:sub.find(" -->")]
@@ -166,8 +167,8 @@ class Erowid:
         if ".shtml" in base_url:
             base_url = "/".join(base_url.split("/")[:-1]) + "/"
         data = {"url": base_url}
-        response = requests.get(url).text
-        soup = BeautifulSoup(response, "lxml")
+        response = Erowid.session.get(url).text
+        soup = BeautifulSoup(response, "html.parser")
         data["name"] = soup.find('div', {'class': 'title-section'}).getText().strip().lower()
         picture = soup.find('div', {'class': "summary-card-topic-image"}).find("img")
         if picture:
@@ -225,8 +226,8 @@ class Erowid:
         elif order is not None:
             url += "&OldSort=" + order
 
-        response = requests.get(url).text
-        soup = BeautifulSoup(response, "lxml")
+        response = Erowid.session.get(url).text
+        soup = BeautifulSoup(response, "html.parser")
         table = soup.find('table', {'class': "exp-list-table"})
         table = table.find_all("tr", {'class': ""})[2:]
         reports = []
@@ -244,6 +245,8 @@ class Erowid:
 
 
 class PsychonautWiki:
+    session = CachedSession(backend='memory',
+                            expire_after=timedelta(hours=24))
     drug_slang = {
         'marijuana': "thc", 'hashish': "thc", 'hash': "thc", 'weed': "thc",
         'marijjuana': "thc", 'cannabis': "thc", 'benzo fury': '6-apb', 'l': 'lsd',
@@ -328,13 +331,13 @@ class PsychonautWiki:
             substance = s
 
         url = "https://api.psychonautwiki.org/?query=%7B%0A%20%20%20%20substances(query%3A%20%22" + substance + "%22)%20%7B%0A%20%20%20%20%20%20%20%20name%0A%0A%20%20%20%20%20%20%20%20%23%20routes%20of%20administration%0A%20%20%20%20%20%20%20%20roas%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20name%0A%0A%20%20%20%20%20%20%20%20%20%20%20%20dose%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20units%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20threshold%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20heavy%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20common%20%7B%20min%20max%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20light%20%7B%20min%20max%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20strong%20%7B%20min%20max%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20%20%20%20%20%20%20duration%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20afterglow%20%7B%20min%20max%20units%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20comeup%20%7B%20min%20max%20units%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20duration%20%7B%20min%20max%20units%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20offset%20%7B%20min%20max%20units%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20onset%20%7B%20min%20max%20units%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20peak%20%7B%20min%20max%20units%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20total%20%7B%20min%20max%20units%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20%20%20%20%20%20%20bioavailability%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20min%20max%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%7D%0A%0A%20%20%20%20%20%20%20%20%23%20subjective%20effects%0A%20%20%20%20%20%20%20%20effects%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20name%20url%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%7D"
-        return json.loads(requests.get(url).text)["data"]
+        return json.loads(PsychonautWiki.session.get(url).text)["data"]
 
     @staticmethod
     def get_substance_list():
         base_url = "https://psychonautwiki.org/wiki/Summary_index"
-        response = requests.get(base_url).text
-        soup = BeautifulSoup(response, "lxml")
+        response = PsychonautWiki.session.get(base_url).text
+        soup = BeautifulSoup(response, "html.parser")
 
         table = soup.findAll('div', {'class': 'panel radius'})
         substances = []
@@ -356,8 +359,8 @@ class PsychonautWiki:
     @staticmethod
     def get_substance_data():
         base_url = "https://psychonautwiki.org/wiki/Summary_index"
-        response = requests.get(base_url).text
-        soup = BeautifulSoup(response, "lxml")
+        response = PsychonautWiki.session.get(base_url).text
+        soup = BeautifulSoup(response, "html.parser")
 
         table = soup.findAll('div', {'class': 'panel radius'})
         substances = {}
@@ -396,80 +399,6 @@ class PsychonautWiki:
 
 
 class AskTheCaterpillar:
-    drug_slang = {
-            'marijuana': "thc", 'hashish': "thc", 'hash': "thc", 'weed': "thc",
-            'marijjuana': "thc", 'cannabis': "thc", 'benzo fury': '6-apb', 'l': 'lsd',
-            'x': 'mdma', 'speed': 'amphetamine', 'pepper oil': 'capsaicin', 'cpp': 'piperazines',
-            'blow': 'cocaine', 'foxy': '5-meo-dipt', 'symmetry': 'salvinorin b ethoxymethyl ether',
-            'nexus': '2c-b', 'tea': 'caffeine', 'robo': 'dxm', ' tussin': 'dxm',
-            'methylethyltryptamine': 'met', 'it-290': 'amt', 'jwh-018': 'cannabinoids',
-            'coffee': 'caffeine', 'mpa': 'methiopropamine', 'ergine': 'lsa',
-            'harmine': 'harmala', 'mxe': 'methoxetamine',
-            '4-ho-met; metocin; methylcybin': '4-hydroxy-met', 'mdea': 'mde',
-            'elavil': 'amitriptyline', 'bk-mdma': 'methylone', 'eve': 'mde',
-            'a2': 'piperazines', 'dimitri': 'dmt', 'plant food': 'mdpv', 'dr. bob': 'dob',
-            'doctor bob': 'dob',
-            'mini thins': 'ephedrine', 'meth': 'methamphetamines', 'acid': 'lsd',
-            'etc.': 'nbome', ' wine': 'alcohol', 'toad venom': 'bufotenin', ' methyl-j': 'mbdb',
-            'krokodil': 'desomorphine', ' 5-hydroxy-dmt': 'bufotenin', ' 3-cpp': 'mcpp',
-            'special k': 'ketamine', 'ice': 'methamphetamines',
-            'nrg-1': 'mdpv', ' gravel': 'alpha-pvp', 'whippits': 'nitrous', 'g': 'ghb',
-            'k': 'ketamine', ' harmaline': 'harmala', 'bob': 'dob', '4-ace': '4-acetoxy-dipt',
-            'quaaludes': 'methaqualone', ' opium': 'opiates', 'u4ea': '4-methylaminorex',
-            'meopp': 'piperazines', 'methcathinone': 'cathinone', 'horse': 'heroin',
-            'haoma': 'harmala', 'unknown': '"spice" product', '4-b': '1,4-butanediol',
-            'naptha': 'petroleum ether', 'beer': 'alcohol', 'bees': '2c-b',
-            '2c-bromo-fly': '2c-b-fly', 'flatliner': '4-mta', 'orexins': 'hypocretin',
-            "meduna's mixture": 'carbogen', 'bdo': '1,4-butanediol',
-            'fatal meperedine-analog contaminant': 'mptp', 'piperazine': 'bzp', '4-ma': 'pma',
-            'paramethoxyamphetamine': 'pma', 'eden': 'mbdb', 'theobromine': 'chocolate',
-            'la-111': 'lsa', 'lysergamide': 'lsa', 'yaba': 'methamphetamines',
-            'ethyl cat': 'ethylcathinone', 'stp': 'dom', '2c-c-nbome': 'nbome',
-            'morphine': 'opiates', 'flakka': 'alpha-pvp', 'yage': 'ayahuasca',
-            'ecstasy': 'mdma', 'ludes': 'methaqualone', 'golden eagle': '4-mta',
-            '4-mma': 'pmma', 'o-dms': '5-meo-amt', 'liquor': 'alcohol',
-            'mephedrone': '4-methylmethcathinone', '1': '1,4-butanediol', 'phencyclidine': 'pcp',
-            'crystal': 'methamphetamines', 'pink adrenaline': 'adrenochrome',
-            '4-mec': '4-methylethcathinone', 'green fairy': 'absinthe', 'laa': 'lsa',
-            'cp 47': 'cannabinoids', 'paramethoxymethylamphetamine': 'pmma',
-            '5-meo': '5-meo-dmt', 'alpha': '5-meo-amt', 'mescaline-nbome': 'nbome',
-            '25c-nbome': '2c-c-nbome', 'flephedrone': '4-fluoromethcathinone',
-            'bzp': 'piperazines', 'codeine': 'opiates', 'foxy methoxy': '5-meo-dipt',
-            '25i-nbome': '2c-i-nbome', '3c-bromo-dragonfly': 'bromo-dragonfly', 'mdai': 'mdai',
-            'tfmpp': 'piperazines'}
-
     def __init__(self):
-        self.substance_list = PsychonautWiki.get_substance_list()
-
-    def fix_substance_names(self, sentence):
-
-        words = sentence.lower().split(" ")
-        found = False
-        # check for drug slang names
-        for substance in self.drug_slang:
-            substance = substance.lower()
-            name = self.drug_slang[substance].strip()
-            for idx, word in enumerate(words):
-                if substance == word:
-                    words[idx] = name
-                    found = True
-
-        # check substance list
-        for substance in self.substance_list:
-            substance = substance.lower()
-            for idx, word in enumerate(words):
-                if substance == word:
-                    words[idx] = substance
-                    found = True
-
-        if found:
-            return " ".join(words)
-        # probably not talking about drugs
-        return found
-
-    @staticmethod
-    def ask_the_caterpillar(query):
-        data = requests.post('https://www.askthecaterpillar.com/query', {"query": query})
-        data = json.loads(data.text)
-        return data["data"]["messages"][0]["content"]
-
+        raise RuntimeError("AskTheCaterpillar chatbot is no longer "
+                           "maintained")
