@@ -9,5 +9,5 @@ setup(
     author='jarbasAI',
     author_email='jarbasai@mailfence.com',
     description='unnoficial erowid, psychonaut wiki and ask_the_caterpillar apis',
-    install_requires=["lxml", "bs4", "requests"]
+    install_requires=["lxml", "beautifulsoup4", "requests"]
 )
