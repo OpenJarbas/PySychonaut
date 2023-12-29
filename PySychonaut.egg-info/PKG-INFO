@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: PySychonaut
+Version: 0.5.1
+Summary: unnoficial erowid, psychonaut wiki and ask_the_caterpillar apis
+Home-page: https://github.com/OpenJarbas/PySychonaut
+Author: jarbasAI
+Author-email: jarbasai@mailfence.com
+License: apache2.0
+License-File: LICENSE.md
